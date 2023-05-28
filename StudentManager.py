@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
-from PyQt5 import uic , QtGui
-from PyQt5.QtCore import Qt
+from PyQt5 import uic, QtGui
+from PyQt5.QtCore import Qt,QThread, QSocketNotifier, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QTableView, QMessageBox
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 import os
@@ -10,12 +10,12 @@ import time
 import sqlite3
 import dataBase
 from playsound import playsound
-
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "1"
 import pygame
 playsound('mohammed_enhanced.wav')
 
-class Ui(QtWidgets.QMainWindow):
+class Ui(QtWidgets.QMainWindow , QThread):
+    dataReady = pyqtSignal()
     def __init__(self):
         super(Ui, self).__init__()
         self.show()
@@ -31,6 +31,17 @@ class Ui(QtWidgets.QMainWindow):
         self.button()
         self.set_mnon()
         self.warning_box = None
+        self.run()
+
+    def run(self):
+        fd = 0 # Replace with your file descriptor
+        notifier = QSocketNotifier(fd, QSocketNotifier.Read, self)
+        notifier.activated.connect(self.onActivated)
+
+    @pyqtSlot(int)
+    def onActivated(self, fd):
+        print("Data ready on file descriptor", fd)
+        self.dataReady.emit()
 
     def button(self):
         self.pushButton_4.clicked.connect(self.set_student)
